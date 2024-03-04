@@ -1,1 +1,2 @@
 fetap @ git+https://github.com/mmEissen/fetap.git
+requests
