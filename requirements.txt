@@ -1,6 +1,1 @@
-certifi==2024.2.2 ; python_version >= "3.12" and python_version < "4.0"
-charset-normalizer==3.3.2 ; python_version >= "3.12" and python_version < "4.0"
-idna==3.6 ; python_version >= "3.12" and python_version < "4.0"
-requests @ git+https://github.com/psf/requests.git@eea3bbf9ac635f465ee6c9903dc57c677952dafd ; python_version >= "3.12" and python_version < "4.0"
-urllib3==2.2.1 ; python_version >= "3.12" and python_version < "4.0"
 fetap @ git+https://github.com/mmEissen/fetap.git
