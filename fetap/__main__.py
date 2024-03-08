@@ -1,6 +1,4 @@
-import subprocess
 import click
-from os import path
 
 
 @click.group
@@ -15,24 +13,34 @@ def run() -> None:
 
 @cli.command
 def release() -> None:
-    project = path.dirname(path.dirname(__file__))
-    release_txt = path.join(project, "release.txt")
-    subprocess.run(
-        ["poetry", "export", "--without-hashes", f"--output={release_txt}"],
-        check=True,
-        cwd=project,
-    )
-    current_commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        capture_output=True,
-        check=True,
-        cwd=project,
-    ).stdout.decode()
-    package_name = "fetap"
-    github_url = "https://github.com/mmEissen/fetap"
-    with open(release_txt, "a") as f:
-        f.write(f"{package_name} @ git+{github_url}@{current_commit}\n")
-    
+    import deploy
+
+    deploy.release()
+
+
+@cli.command
+@click.argument("remotehost", type=str)
+@click.option("--dev", is_flag=True, default=False)
+def install(remotehost: str, dev: bool) -> None:
+    import deploy
+
+    deploy.install(remotehost, dev)
+
+
+@cli.command
+@click.argument("remotehost", type=str)
+def uninstall(remotehost: str) -> None:
+    import deploy
+
+    deploy.uninstall(remotehost)
+
+
+@cli.command
+@click.argument("remotehost", type=str)
+def logs(remotehost: str) -> None:
+    import deploy
+
+    deploy.logs(remotehost)
 
 
 cli()
