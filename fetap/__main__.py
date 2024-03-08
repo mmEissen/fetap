@@ -49,7 +49,7 @@ def logs(remotehost: str) -> None:
 def deploy_dev(remotehost: str) -> None:
     from fetap import deploy
 
-    deploy.deploy_dev(remotehost)
+    deploy.deploy_dev(remotehost, show_logs=True)
 
 
 cli()
