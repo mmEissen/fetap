@@ -94,5 +94,16 @@ def logs(remotehost: str) -> None:
     )
 
 
-def deploy_dev():
-    pass
+def deploy_dev(remotehost: str) -> None:
+    project = path.dirname(path.dirname(__file__))
+    release_txt = path.join(project, "release.txt")
+    install_dir = "/opt/fetap"
+
+    subprocess.run(
+        [
+            "scp",
+            release_txt,
+            f"{remotehost}:{install_dir}",
+        ],
+        check=True,
+    )

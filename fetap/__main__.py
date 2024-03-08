@@ -8,39 +8,48 @@ def cli() -> None:
 
 @cli.command
 def run() -> None:
-    pass
+    import time
+    time.sleep(99999)
 
 
 @cli.command
 def release() -> None:
-    import deploy
+    from fetap import deploy
 
     deploy.release()
 
 
 @cli.command
-@click.argument("remotehost", type=str)
+@click.argument("remotehost", type=str, envvar="FETAP_REMOTEHOST")
 @click.option("--dev", is_flag=True, default=False)
 def install(remotehost: str, dev: bool) -> None:
-    import deploy
+    from fetap import deploy
 
     deploy.install(remotehost, dev)
 
 
 @cli.command
-@click.argument("remotehost", type=str)
+@click.argument("remotehost", type=str, envvar="FETAP_REMOTEHOST")
 def uninstall(remotehost: str) -> None:
-    import deploy
+    from fetap import deploy
 
     deploy.uninstall(remotehost)
 
 
 @cli.command
-@click.argument("remotehost", type=str)
+@click.argument("remotehost", type=str, envvar="FETAP_REMOTEHOST")
 def logs(remotehost: str) -> None:
-    import deploy
+    from fetap import deploy
 
     deploy.logs(remotehost)
+
+
+@cli.command
+@click.argument("remotehost", type=str, envvar="FETAP_REMOTEHOST")
+def deploy_dev(remotehost: str) -> None:
+    from fetap import deploy
+
+    deploy.deploy_dev(remotehost)
 
 
 cli()
