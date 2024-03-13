@@ -2,6 +2,7 @@ import os
 import subprocess
 from os import path
 import tempfile
+import time
 
 
 PROJECT_DIR = path.dirname(path.dirname(__file__))
@@ -25,7 +26,7 @@ def release(output: str=RELEASE_TXT, is_dev: bool = False):
     ).stdout.decode()
     with open(output, "a") as f:
         if is_dev:
-            f.write(f"-e {INSTALL_DIR}/src/fetap\n")
+            f.write(f"-e {INSTALL_DIR}/src/fetap\n# {time.time()}\n")
         else:
             f.write(f"{PACKAGE_NAME} @ git+{GITHUB_URL}@{current_commit}\n")
 
@@ -94,7 +95,7 @@ def uninstall(remotehost: str) -> None:
 
 def logs(remotehost: str) -> None:
     subprocess.run(
-        ["ssh", remotehost, f"sudo journalctl -f -u fetap.service -n 100"],
+        ["ssh", remotehost, f"sudo journalctl -f -a -u fetap.service -n 100"],
     )
 
 
@@ -104,6 +105,12 @@ def deploy_dev(remotehost: str, show_logs: bool=False) -> None:
             "rsync",
             "-P",
             "-r",
+            "-q",
+            "-i",
+            "--exclude",
+            ".git",
+            "--exclude",
+            "__pycache__",
             PROJECT_DIR,
             f"{remotehost}:{INSTALL_DIR}/src",
         ],

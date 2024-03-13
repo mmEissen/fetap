@@ -3,7 +3,7 @@ Description=Fernsprechtischapparat
 After=network-online.target
 
 [Service]
-ExecStart={install_dir}/autoupdater-venv/bin/python -m autoupdater {args}
+ExecStart=/usr/bin/stdbuf -oL {install_dir}/autoupdater-venv/bin/python -m autoupdater {args}
 WorkingDirectory={install_dir}
 StandardOutput=inherit
 StandardError=inherit

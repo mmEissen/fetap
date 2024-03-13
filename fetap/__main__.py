@@ -1,6 +1,7 @@
 import click
 
 
+
 @click.group
 def cli() -> None:
     pass
@@ -8,8 +9,9 @@ def cli() -> None:
 
 @cli.command
 def run() -> None:
-    import time
-    time.sleep(99999)
+    print("Started")
+    from fetap import dial
+    dial.get_number()
 
 
 @cli.command
