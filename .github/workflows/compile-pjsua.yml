@@ -44,7 +44,9 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          python3 setup.py bdist_wheel
+          echo "bdist:" >> Makefile
+          echo "	python3 setup.py bdist_wheel" >> Makefile
+          make bdist
           find .
 
     #   - name: Upload binary
