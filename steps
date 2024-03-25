@@ -1,0 +1,60 @@
+
+# Build Instructions:
+https://docs.pjsip.org/en/latest/get-started/posix/build_instructions.html
+
+# Requirements
+sudo apt-get install binutils
+sudo apt-get install gcc
+sudo apt-get install libasound2-dev
+sudo apt-get install swig
+sudo apt-get install python3-dev
+
+
+# Source code
+wget https://github.com/pjsip/pjproject/archive/refs/tags/2.14.1.tar.gz
+tar -xvf 2.14.1.tar.gz
+cd pjproject-2.14.1/
+
+# Build pjsip
+./configure CFLAGS="-fPIC"
+make dep
+make
+
+
+the executable is in pjsip-apps/bin/pjsua...
+
+# use ngrok?
+
+------
+Below here is probably not needed!
+
+
+# Build pjsua for python
+cd pjsip-apps/src/swig/python
+make
+make install
+
+
+# Sound card defaults:
+# https://wiki.archlinux.org/title/Advanced_Linux_Sound_Architecture#Set_the_default_sound_card
+# This seems to work:
+# To see the devices:
+aplay -l
+```
+**** List of PLAYBACK Hardware Devices ****
+card 0: Headphones [bcm2835 Headphones], device 0: bcm2835 Headphones [bcm2835 Headphones]
+  Subdevices: 8/8
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+  Subdevice #2: subdevice #2
+  Subdevice #3: subdevice #3
+  Subdevice #4: subdevice #4
+  Subdevice #5: subdevice #5
+  Subdevice #6: subdevice #6
+  Subdevice #7: subdevice #7
+card 1: Device [USB Audio Device], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+```
+# Set the environment variable to the name (in this case "Device"):
+export ALSA_CARD=Device
