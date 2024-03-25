@@ -27,7 +27,7 @@ jobs:
             swig \
             python3-dev \
             python3-pip
-          python3 -m pip install build
+          python3 -m pip install --break-system-packages build
 
       - name: Download source release of PJSUA/PJSIP
         run: |
