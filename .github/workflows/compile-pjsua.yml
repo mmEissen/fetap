@@ -1,6 +1,12 @@
 name: Cross compile PJSUA for ARM64
 
-on: [push]
+on:
+  push:
+    paths:
+      - .github/workflows/compile-pjsua.yml
+
+env:
+  PJSUA_VERSION: 2.14.1
 
 jobs:
   build:
@@ -9,9 +15,6 @@ jobs:
       image: debian:12
 
     steps:
-    #   - name: Check out repo
-    #     uses: actions/checkout@v3
-
       - name: Install cross compiler and build utils
         run: |
           apt-get update
@@ -26,9 +29,9 @@ jobs:
 
       - name: Download source release of PJSUA/PJSIP
         run: |
-          wget --no-verbose https://github.com/pjsip/pjproject/archive/refs/tags/2.14.1.tar.gz
-          tar -xvf 2.14.1.tar.gz
-          mv pjproject-2.14.1 pjproject
+          wget --no-verbose https://github.com/pjsip/pjproject/archive/refs/tags/${PJSUA_VERSION}.tar.gz
+          tar -xvf ${PJSUA_VERSION}.tar.gz
+          mv pjproject-${PJSUA_VERSION} pjproject
 
       - name: Build PJProject
         run: |
@@ -40,7 +43,7 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          python setup.py build --wheel
+          python3 setup.py build --wheel
           find .
 
 
