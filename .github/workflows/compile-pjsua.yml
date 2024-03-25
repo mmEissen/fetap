@@ -45,7 +45,7 @@ jobs:
         run: |
           cd pjproject/pjsip-apps/src/swig/python
           make wheel
-          mv /dist/pjsua2*.whl /dist/pjsua2.whl
+          mv /dist/pjsua2-${PJSUA_VERSION}-cp311-cp311-linux_x86_64.whl /dist/pjsua2.whl
 
       - name: Upload Wheel
         uses: actions/upload-artifact@v3
