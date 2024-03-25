@@ -1,4 +1,4 @@
-name: Cross compile for ARM64
+name: Cross compile PJSUA for ARM64
 
 on: [push]
 
@@ -15,7 +15,14 @@ jobs:
       - name: Install cross compiler and build utils
         run: |
           apt-get update
-          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu cmake build-essential wget
+          apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            cmake \
+            build-essential \
+            wget \
+            swig \
+            python3-dev \
 
       - name: Download source release of PJSUA/PJSIP
         run: |
@@ -23,12 +30,19 @@ jobs:
           tar -xvf 2.14.1.tar.gz
           mv pjproject-2.14.1 pjproject
 
-      - name: Cross compile
+      - name: Build PJProject
         run: |
           cd pjproject
-          ./configure
+          ./configure CFLAGS="-fPIC"
           make dep
           make
+      
+      - name: Buld Python SWIG Module
+        run: |
+          cd pjproject/pjsip-apps/src/swig/python
+          make
+          ls -la
+
 
     #   - name: Upload binary
     #     uses: actions/upload-artifact@v3
