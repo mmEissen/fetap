@@ -44,7 +44,7 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          echo "all:" >> Makefile
+          echo "all:" > Makefile
           echo "	python setup.py bdist_wheel" >> Makefile
           make
           find .
