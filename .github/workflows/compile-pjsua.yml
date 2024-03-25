@@ -1,0 +1,37 @@
+name: Cross compile for ARM64
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:12
+
+    steps:
+    #   - name: Check out repo
+    #     uses: actions/checkout@v3
+
+      - name: Install cross compiler and build utils
+        run: |
+          apt-get update
+          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu cmake build-essential wget
+
+      - name: Download source release of PJSUA/PJSIP
+        run: |
+          wget https://github.com/pjsip/pjproject/archive/refs/tags/2.14.1.tar.gz
+          tar -xvf 2.14.1.tar.gz
+          mv pjproject-2.14.1 pjproject
+
+      - name: Cross compile
+        run: |
+          cd pjproject
+          ./configure
+          make deps
+          make
+
+    #   - name: Upload binary
+    #     uses: actions/upload-artifact@v3
+    #     with:
+    #       name: hello
+    #       path: build/hello
