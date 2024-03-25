@@ -44,11 +44,14 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          make wheel
-          mv dist/pjsua2*.whl dist/pjsua2.whl
+          make
+          make install
+          find $(python3 -m site --user-site)
+          # make wheel
+          # mv dist/pjsua2*.whl dist/pjsua2.whl
 
-      - name: Upload Wheel
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheel
-          path: pjproject/pjsip-apps/src/swig/python/dist/pjsua2.whl
+      # - name: Upload Wheel
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: wheel
+      #     path: pjproject/pjsip-apps/src/swig/python/dist/pjsua2.whl
