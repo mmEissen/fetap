@@ -45,10 +45,10 @@ jobs:
         run: |
           cd pjproject/pjsip-apps/src/swig/python
           make wheel
-          find .
+          mv /dist/pjsua2*.whl /dist/pjsua2.whl
 
-    #   - name: Upload binary
-    #     uses: actions/upload-artifact@v3
-    #     with:
-    #       name: hello
-    #       path: build/hello
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheel
+          path: pjproject/pjsip-apps/src/swig/python/dist/pjsua2.whl
