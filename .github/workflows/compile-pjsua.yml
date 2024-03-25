@@ -25,7 +25,8 @@ jobs:
             build-essential \
             wget \
             swig \
-            python3-dev \
+            python3-dev
+          python3 -m pip install build
 
       - name: Download source release of PJSUA/PJSIP
         run: |
@@ -43,7 +44,7 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          python3 setup.py build --wheel
+          python3 -m build --wheel
           find .
 
 
