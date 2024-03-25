@@ -45,7 +45,7 @@ jobs:
         run: |
           cd pjproject/pjsip-apps/src/swig/python
           echo "bdist:" >> Makefile
-          echo "	python3 setup.py bdist_wheel" >> Makefile
+          echo "	python setup.py bdist_wheel" >> Makefile
           make bdist
           find .
 
