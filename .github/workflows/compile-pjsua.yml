@@ -19,7 +19,7 @@ jobs:
 
       - name: Download source release of PJSUA/PJSIP
         run: |
-          wget https://github.com/pjsip/pjproject/archive/refs/tags/2.14.1.tar.gz
+          wget --no-verbose https://github.com/pjsip/pjproject/archive/refs/tags/2.14.1.tar.gz
           tar -xvf 2.14.1.tar.gz
           mv pjproject-2.14.1 pjproject
 
@@ -27,7 +27,7 @@ jobs:
         run: |
           cd pjproject
           ./configure
-          make deps
+          make dep
           make
 
     #   - name: Upload binary
