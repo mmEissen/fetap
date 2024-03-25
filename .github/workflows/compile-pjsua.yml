@@ -40,8 +40,8 @@ jobs:
       - name: Buld Python SWIG Module
         run: |
           cd pjproject/pjsip-apps/src/swig/python
-          make
-          ls -la
+          python setup.py build --wheel
+          find .
 
 
     #   - name: Upload binary
