@@ -45,13 +45,14 @@ jobs:
         run: |
           cd pjproject/pjsip-apps/src/swig/python
           make
+          mkdir package
           make install
-          find $(python3 -m site --user-site)
-          # make wheel
-          # mv dist/pjsua2*.whl dist/pjsua2.whl
+          mv $(python3 -m site --user-site)/pjsua2-2.14.1-py3.11-linux-x86_64.egg pjsua2-2.14.1-py3.11-linux-x86_64.egg
+          rm -rf pjsua2-2.14.1-py3.11-linux-x86_64.egg/__pycache__
+          tar -czvf pjsua2.tar.gz pjsua2-2.14.1-py3.11-linux-x86_64.egg
 
-      # - name: Upload Wheel
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: wheel
-      #     path: pjproject/pjsip-apps/src/swig/python/dist/pjsua2.whl
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: pjsua2
+          path: pjproject/pjsip-apps/src/swig/python/pjsua2.tar.gz
