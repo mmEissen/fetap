@@ -1,4 +1,4 @@
-from typing import Callable, Literal, NewType
+from typing import Callable, Literal, NewType, Union
 
 
 _BOART_T = NewType("_BOART_T", object)
@@ -30,40 +30,40 @@ _BOTH_T = NewType("_BOTH_T", object)
 BOTH: _BOTH_T
 
 
-def setmode(mode: _BOART_T | _BCM_T) -> None: ...
+def setmode(mode: Union[_BOART_T, _BCM_T]) -> None: ...
 
 
 def setup(
-    channel: int | list[int],
-    mode: _IN_T | _OUT_T,
+    channel: Union[int, list[int]],
+    mode: Union[_IN_T, _OUT_T],
     *,
-    initial: _HIGH_T | _LOW_T | None = None,
-    pull_up_down: _PUD_DOWN_T | _PUD_UP_T | None = None,
+    initial: Union[_HIGH_T, _LOW_T, None] = None,
+    pull_up_down: Union[_PUD_DOWN_T, _PUD_UP_T, None] = None,
 ) -> None: ...
 
 
-def input(channel: int) -> _HIGH_T | _LOW_T: ...
+def input(channel: int) -> Union[_HIGH_T, _LOW_T]: ...
 
 
 def wait_for_edge(
     chanel: int,
-    direction: _RISING_T | _FALLING_T | _BOTH_T,
+    direction: Union[_RISING_T, _FALLING_T, _BOTH_T],
     *,
     timeout_ms: int = -1,
-) -> None | int: ...
+) -> Union[None, int]: ...
 
 
 def add_event_detect(
     chanel: int,
-    direction: _RISING_T | _FALLING_T | _BOTH_T,
+    direction: Union[_RISING_T, _FALLING_T, _BOTH_T],
     callback: Callable[[int], None],
 ) -> None: ...
 
 
-def add_event_callback(channel: int, callback: Callable[[int], None]) -> None: ...
+def add_event_callback(channel: int, callback: Callable[[int], None], bouncetime: int) -> None: ...
 
 
-def output(channel: int, value: _HIGH_T | _LOW_T) -> None: ...
+def output(channel: int, value: Union[_HIGH_T, _LOW_T]) -> None: ...
 
 
 def cleanup() -> None: ...

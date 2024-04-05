@@ -6,10 +6,11 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"  # To satisfy statemachine's requirement
+python = ">=3.9,<3.13"  # To satisfy statemachine's requirement
 click = "^8.1.7"
-rpi-gpio = {version="==0.7.1", markers="platform_machine == 'aarch64'"}
 python-statemachine = "^2.1.2"
+rpi-gpio = {version="==0.7.1", markers="platform_machine == 'aarch64'"}
+pjsua2 = { url="https://github.com/mmEissen/pjsip-wheels/releases/download/v2.14.1/pjsua2-2.14.1-py39-none-any.whl", markers="platform_machine == 'aarch64'"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.2"

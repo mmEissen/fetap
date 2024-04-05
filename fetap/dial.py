@@ -19,9 +19,9 @@ else:
 
 def get_number() -> None:
     print("Setup")
-    gpio.setmode(gpio.BOARD)
-    PIN_IMPULSE = 13
-    PIN_ENABLE = 11
+    gpio.setmode(gpio.BCM)
+    PIN_IMPULSE = 22
+    PIN_ENABLE = 27
 
     gpio.setup(PIN_ENABLE, gpio.IN, pull_up_down=gpio.PUD_DOWN)
     gpio.setup(PIN_IMPULSE, gpio.IN, pull_up_down=gpio.PUD_DOWN)
@@ -30,12 +30,13 @@ def get_number() -> None:
 
     def impulse(chanel: int) -> None:
         nonlocal counter
+        print("pulse")
         with counter_lock:
             counter += 1
             counter %= 10
     
-    gpio.add_event_detect(PIN_IMPULSE, gpio.RISING)
-    gpio.add_event_callback(PIN_IMPULSE, impulse)
+    gpio.add_event_detect(PIN_IMPULSE, gpio.FALLING, callback=impulse, bouncetime=40)
+    # gpio.add_event_callback(PIN_IMPULSE, impulse, bouncetime=40)
 
     print("starting loop")
     while True:
@@ -57,7 +58,7 @@ def ring() -> None:
     RING_TIME = 1
     PAUSE_TIME = 1
     N = 3
-    PIN = 15
+    PIN = 17
 
     gpio.setup(PIN, gpio.OUT, initial=gpio.LOW)
 

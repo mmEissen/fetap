@@ -26,7 +26,7 @@ def release(output: str=RELEASE_TXT, is_dev: bool = False):
     ).stdout.decode()
     with open(output, "a") as f:
         if is_dev:
-            f.write(f"-e {INSTALL_DIR}/src/fetap\n# {time.time()}\n")
+            f.write(f"-e {INSTALL_DIR}/src/fetap\n# autoupdater-enforce-digest {time.time()}\n")
         else:
             f.write(f"{PACKAGE_NAME} @ git+{GITHUB_URL}@{current_commit}\n")
 
@@ -107,10 +107,12 @@ def deploy_dev(remotehost: str, show_logs: bool=False) -> None:
             "-r",
             "-q",
             "-i",
-            "--exclude",
-            ".git",
-            "--exclude",
-            "__pycache__",
+            "--exclude=.git",
+            "--exclude=__pycache__",
+            "--exclude=.vscode",
+            "--exclude=.pytest_cache",
+            "--exclude=pyproject.toml",
+            "--exclude=poetry.lock",
             PROJECT_DIR,
             f"{remotehost}:{INSTALL_DIR}/src",
         ],

@@ -3,11 +3,8 @@
 https://docs.pjsip.org/en/latest/get-started/posix/build_instructions.html
 
 # Requirements
-sudo apt-get install binutils
-sudo apt-get install gcc
-sudo apt-get install libasound2-dev
-sudo apt-get install swig
-sudo apt-get install python3-dev
+sudo apt-get update
+sudo apt-get install binutils gcc libasound2-dev swig python3-dev python3-pip python3-venv
 
 
 # Source code
@@ -16,24 +13,37 @@ tar -xvf 2.14.1.tar.gz
 cd pjproject-2.14.1/
 
 # Build pjsip
-./configure CFLAGS="-fPIC"
+./configure CFLAGS="-fPIC" --disable-libwebrtc
 make dep
 make
 
 
 the executable is in pjsip-apps/bin/pjsua...
 
-# use ngrok?
 
-------
-Below here is probably not needed!
-
-
-# Build pjsua for python
+# Build pjsua2 wheel for python
 cd pjsip-apps/src/swig/python
 make
-make install
 
+(not sure if still needed) edit setup.py and add `import setuptools` at the top (It needs to be the first import!)
+
+cd ~
+python -m venv venv
+. venv/bin/activate
+cd pjproject-2.14.1/pjsip-apps/src/swig/python
+python setup.py install
+deactivate
+cd ~
+python -m wheel convert venv/lib/python3.9/site-packages/pjsua2-2.14.1-py3.9-linux-aarch64.egg
+mv pjsua2-2.14.1-py39-cp39-linux_aarch64.whl pjsua2-2.14.1-py39-none-any.whl
+
+# test the wheel
+cd ~
+python -m venv venv2
+venv2/bin/pip install pjsua2-2.14.1-py39-none-any.whl
+venv2/bin/python -c "import pjsua2"
+
+# use ngrok?
 
 # Sound card defaults:
 # https://wiki.archlinux.org/title/Advanced_Linux_Sound_Architecture#Set_the_default_sound_card
@@ -58,3 +68,5 @@ card 1: Device [USB Audio Device], device 0: USB Audio [USB Audio]
 ```
 # Set the environment variable to the name (in this case "Device"):
 export ALSA_CARD=Device
+arecord -f cd mic-test.wav
+aplay mic-test.wav 
