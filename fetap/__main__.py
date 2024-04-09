@@ -10,8 +10,11 @@ def cli() -> None:
 @cli.command
 def run() -> None:
     print("Started")
-    from fetap import dial
+    from fetap import mumble, dial
+    import os
     dial.get_number()
+    os.environ["ALSA_CARD"] = "Device"
+    mumble.main()
 
 
 @cli.command

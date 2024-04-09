@@ -70,3 +70,33 @@ card 1: Device [USB Audio Device], device 0: USB Audio [USB Audio]
 export ALSA_CARD=Device
 arecord -f cd mic-test.wav
 aplay mic-test.wav 
+
+
+
+
+# mumble?
+
+sudo apt install mumble-server
+sudo dpkg-reconfigure mumble-server
+
+sudo apt-get install opus-tools
+
+need pymumble and pyaudio
+
+sudo apt install portaudio19-dev
+
+
+https://github.com/azlux/pymumble/blob/pymumble_py3/examples/audio-only_client.py
+fails somehow :(
+
+
+
+# maybe
+sudo apt-get install libopenal-dev libopus-dev
+
+https://github.com/cantudo/barnard
+https://www.jeremymorgan.com/tutorials/raspberry-pi/install-go-raspberry-pi/
+
+clone project
+cd barnard
+go build

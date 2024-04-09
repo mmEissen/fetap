@@ -1,20 +1,12 @@
 
 import threading
-from typing import TYPE_CHECKING
 
 import logging
 import time
 
 log = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    import fetap.fake_gpio as gpio
-else:
-    try:
-        import RPi.GPIO as gpio
-    except ImportError:
-        log.warning("Using fake GPIO")
-        import fetap.fake_gpio as gpio
+from fetap.conman import gpio
 
 
 def get_number() -> None:
