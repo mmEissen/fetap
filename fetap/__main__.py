@@ -10,11 +10,14 @@ def cli() -> None:
 @cli.command
 def run() -> None:
     print("Started")
-    from fetap import mumble, dial
+    from fetap import main
     import os
-    dial.get_number()
+    import logging
+    logging.basicConfig(format="{threadName}: {message}", style="{", level=logging.DEBUG, force=True)
+    
     os.environ["ALSA_CARD"] = "Device"
-    mumble.main()
+    with main.create_app() as app:
+        app.run_forever()
 
 
 @cli.command

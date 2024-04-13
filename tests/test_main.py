@@ -32,6 +32,10 @@ class TestApp:
     @pytest.fixture
     def hardware(self, events: list[main.PhoneEvent]) -> main.FakeHardware:
         return FakeHardware(events)
+    
+    @pytest.fixture
+    def hardware(self) -> main.FakeHardware:
+        return main.Phone()
 
     @pytest.fixture
     def app(self, hardware: main.FakeHardware) -> main.App:

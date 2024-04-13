@@ -113,6 +113,7 @@ def deploy_dev(remotehost: str, show_logs: bool=False) -> None:
             "--exclude=.pytest_cache",
             "--exclude=pyproject.toml",
             "--exclude=poetry.lock",
+            "--exclude=pjsua",
             PROJECT_DIR,
             f"{remotehost}:{INSTALL_DIR}/src",
         ],

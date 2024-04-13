@@ -1,6 +1,5 @@
 from __future__ import annotations
 import contextlib
-import dataclasses
 import enum
 import queue
 import subprocess
@@ -8,6 +7,9 @@ import threading
 from typing import Callable, Iterable
 import requests
 from os import path
+import logging
+
+log = logging.getLogger(__name__)
 
 
 DOWNLOAD_URL = (
@@ -23,11 +25,14 @@ def download_pjsua() -> None:
         with open(PJSUA_PATH, "wb") as f:
             for chunk in response.iter_content():
                 f.write(chunk)
+    subprocess.run(["chmod", "+x", PJSUA_PATH], check=True)
 
 
 def ensure_pjsua() -> None:
     if path.exists(PJSUA_PATH):
         return
+    log.debug("PJSUA not found, downloading from %s", DOWNLOAD_URL)
+    # TODO: A failed download might leave a broken file, so add some checksum maybe?
     download_pjsua()
 
 
@@ -155,6 +160,19 @@ class PJSua:
     def start(self) -> None:
         assert self._process_ is None
         ensure_pjsua()
+
+        command = [
+            "stdbuf",  # If we don't do this then there will appear to be no stdout
+            "-o0",
+            PJSUA_PATH,
+            "--use-cli",
+            "--max-calls=3",
+            "--no-tones",
+            "--no-color",
+            "--log-level=0",
+        ]
+        log.debug("Starting PJSUA process with: `%s`", " ".join(command))
+        
         self._process_ = subprocess.Popen(
             [
                 "stdbuf",  # If we don't do this then there will appear to be no stdout
@@ -172,11 +190,11 @@ class PJSua:
             bufsize=0,
             universal_newlines=True,
         )
-        self._supervisor_thread.start()
         self._stdout_thread.start()
         # When the process starts it prints the prompt symbols ">>>". We wan to
         # discard this first output
         self._stdout_queue.get(timeout=_STDOUT_TIMEOUT)
+        self._supervisor_thread.start()
 
     def send_command(self, command: str, timeout=_STDOUT_TIMEOUT) -> str:
         self._command_queue.put_nowait((command, timeout))
@@ -201,9 +219,3 @@ class PJSua:
     def stop(self) -> None:
         self._should_stop.set()
         self._process.terminate()
-
-
-def test() -> PJSua:
-    p = PJSua(lambda: None, lambda: None, lambda: None)
-    p.start()
-    return p

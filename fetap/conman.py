@@ -1,5 +1,8 @@
 from typing import TYPE_CHECKING
 
+import logging
+
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import fetap.fake_gpio as _gpio
