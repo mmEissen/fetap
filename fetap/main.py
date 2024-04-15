@@ -2,6 +2,8 @@ from __future__ import annotations
 import contextlib
 
 import enum
+import subprocess
+import sys
 from typing import Iterable, Protocol
 from statemachine import StateMachine, State
 from statemachine.exceptions import TransitionNotAllowed
@@ -194,6 +196,23 @@ class App:
 
 
 @contextlib.contextmanager
+def config_server() -> Iterable[None]:
+    subprocess.Popen([
+        sys.executable,
+        "-m",
+        "flask",
+        "--app",
+        "fetap.web_server",
+        "run",
+        "--host=0.0.0.0",
+    ])
+    try:
+        yield
+    finally:
+        pass
+
+
+@contextlib.contextmanager
 def phone_app(
     event_queue: queue.Queue[Event],
     phone: Phone,
@@ -226,5 +245,5 @@ def create_app() -> Iterable[App]:
     phone: Phone = Phone(pjsua_=pjsua_)
     hardware = Hardware(event_queue)
 
-    with phone_app(event_queue, phone, pjsua_, hardware) as app:
+    with config_server(), phone_app(event_queue, phone, pjsua_, hardware) as app:
         yield app

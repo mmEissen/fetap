@@ -174,19 +174,9 @@ class PJSua:
         log.debug("Starting PJSUA process with: `%s`", " ".join(command))
         
         self._process_ = subprocess.Popen(
-            [
-                "stdbuf",  # If we don't do this then there will appear to be no stdout
-                "-o0",
-                PJSUA_PATH,
-                "--use-cli",
-                "--max-calls=3",
-                "--no-tones",
-                "--no-color",
-                "--log-level=0",
-            ],
+            command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            # stderr=subprocess.DEVNULL,
             bufsize=0,
             universal_newlines=True,
         )
