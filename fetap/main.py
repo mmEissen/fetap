@@ -11,6 +11,8 @@ import queue
 
 import logging
 
+from fetap.storage import PhoneBook
+
 log = logging.getLogger(__name__)
 
 from fetap.conman import gpio
@@ -166,6 +168,7 @@ class App:
         phone: Phone,
         pjsua_: pjsua.PJSua,
         hardware: Hardware,
+        phone_book: PhoneBook,
     ) -> None:
         self.event_queue = event_queue
         self.phone = phone
@@ -234,7 +237,7 @@ def phone_app(
 
 
 @contextlib.contextmanager
-def create_app() -> Iterable[App]:
+def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
     log.debug("Creating App")
     event_queue: queue.Queue[Event] = queue.Queue()
     pjsua_ = pjsua.PJSua(
@@ -244,6 +247,7 @@ def create_app() -> Iterable[App]:
     )
     phone: Phone = Phone(pjsua_=pjsua_)
     hardware = Hardware(event_queue)
+    phone_book = PhoneBook(file_path=phone_book_path)
 
-    with config_server(), phone_app(event_queue, phone, pjsua_, hardware) as app:
+    with config_server(), phone_app(event_queue, phone, pjsua_, hardware, phone_book) as app:
         yield app
