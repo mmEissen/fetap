@@ -16,7 +16,7 @@ def settings_page():
     return render_template("settings.html")
 
 @app.route("/numbers")
-def settings_page():
+def list_numbers():
     return (
         "<table>"
             "<tr>"

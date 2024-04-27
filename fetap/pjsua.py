@@ -9,31 +9,45 @@ import requests
 from os import path
 import logging
 
+import platform
+
 log = logging.getLogger(__name__)
 
 
-DOWNLOAD_URL = (
-    "https://github.com/mmEissen/pjsip-rpi-release/releases/download/v2.14.1/pjsua"
+DOWNLOAD_URL_TEMPLATE = (
+    "https://github.com/mmEissen/pjsip-rpi-release/releases/download/v2.14.1/pjsua-{machine}"
 )
 PJSUA_PATH = path.join(path.dirname(__file__), "pjsua")
 _STDOUT_TIMEOUT = 10
 
 
+def ensure_pjsua() -> None:
+    ensure_pjsua_exists()
+    ensure_pjsua_executable()
+
+
+def ensure_pjsua_exists() -> None:
+    if path.exists(PJSUA_PATH):
+        return
+    log.debug("PJSUA not found, downloading from %s", DOWNLOAD_URL_TEMPLATE)
+    # TODO: A failed download might leave a broken file, so add some checksum maybe?
+    download_pjsua()
+
+
 def download_pjsua() -> None:
-    with requests.get(DOWNLOAD_URL, stream=True) as response:
+    # something is broken here:
+    # When I wget the file and run it it works, the file downloaded here causes
+    # segmentation fault error
+    download_url = DOWNLOAD_URL_TEMPLATE.format(machine=platform.machine())
+    with requests.get(download_url, stream=True) as response:
         response.raise_for_status()
         with open(PJSUA_PATH, "wb") as f:
             for chunk in response.iter_content():
                 f.write(chunk)
+
+
+def ensure_pjsua_executable() -> None:
     subprocess.run(["chmod", "+x", PJSUA_PATH], check=True)
-
-
-def ensure_pjsua() -> None:
-    if path.exists(PJSUA_PATH):
-        return
-    log.debug("PJSUA not found, downloading from %s", DOWNLOAD_URL)
-    # TODO: A failed download might leave a broken file, so add some checksum maybe?
-    download_pjsua()
 
 
 @contextlib.contextmanager

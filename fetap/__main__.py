@@ -60,4 +60,21 @@ def deploy_dev(remotehost: str) -> None:
     deploy.deploy_dev(remotehost, show_logs=True)
 
 
+@cli.command
+def state_graph() -> None:
+    from fetap import main
+    from statemachine.contrib.diagram import DotGraphMachine
+
+    graph = DotGraphMachine(main.Phone)
+    dot = graph()
+    dot.write_png("phone.png")
+
+
+@cli.command
+def hardware_test() -> None:
+    from fetap import main
+
+    main.hardware_test()
+
+
 cli()

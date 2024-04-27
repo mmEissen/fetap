@@ -4,7 +4,8 @@ import contextlib
 import enum
 import subprocess
 import sys
-from typing import Iterable, Protocol
+import time
+from typing import Callable, Iterable, Protocol
 from statemachine import StateMachine, State
 from statemachine.exceptions import TransitionNotAllowed
 import queue
@@ -19,6 +20,9 @@ from fetap.conman import gpio
 from fetap import pjsua
 
 
+def noop() -> None:
+    return
+
 class Phone(StateMachine):
     idle = State(initial=True)
     awaiting_dial_input = State()
@@ -29,7 +33,6 @@ class Phone(StateMachine):
     disconnected = State()
 
     pick_up_receiver = idle.to(awaiting_dial_input) | ringing.to(in_call)
-    number_dialed = awaiting_dial_input.to(in_call)
     receiver_down = (
         in_call.to(idle)
         | awaiting_dial_input.to(idle)
@@ -37,7 +40,7 @@ class Phone(StateMachine):
         | dial_active.to(idle)
         | disconnected.to(idle)
     )
-    counter_party_hang_up = in_call.to(disconnected)
+    counter_party_hang_up = in_call.to(disconnected) | ringing.to(idle)
     activate_dial = awaiting_dial_input.to(dial_active)
     deactivate_dial = dial_active.to(
         awaiting_dial_input, unless="is_last_digit"
@@ -68,10 +71,10 @@ class Phone(StateMachine):
         if self.current_dial_digit == 10:
             return
         self.dialed_number += str(self.current_dial_digit)
-    
+
     def after_receiver_down(self) -> None:
         self.dialed_number = ""
-    
+
     def on_exit_in_call(self) -> None:
         self.pjsua.hangup_all()
 
@@ -84,19 +87,24 @@ class PhoneEvent(Protocol):
 
 
 class _Event:
-    def __call__(self, phone: Phone) -> None:
-        return NotImplemented
+    def __init__(self, callback: Callable[[Phone], None]) -> None:
+        self.callback = callback
 
 
 class Event(_Event, enum.Enum):
-    RECEIVER_UP = Phone.pick_up_receiver
-    RECEIVER_DOWN = Phone.receiver_down
-    DIAL_ACTIVATE = Phone.activate_dial
-    DIAL_DEACTIVATE = Phone.deactivate_dial
-    DIAL_PULSE = Phone.dial_pulse
-    INCOMING_CALL = Phone.call_received
-    CALL_CONNECTED = Phone.call_connected
-    COUNTER_PARTY_HANG_UP = Phone.counter_party_hang_up
+    RECEIVER_UP = (Phone.pick_up_receiver,)
+    RECEIVER_DOWN = (Phone.receiver_down,)
+    DIAL_ACTIVATE = (Phone.activate_dial,)
+    DIAL_DEACTIVATE = (Phone.deactivate_dial,)
+    DIAL_PULSE = (Phone.dial_pulse,)
+    INCOMING_CALL = (Phone.call_received,)
+    CALL_CONNECTED = (Phone.call_connected,)
+    COUNTER_PARTY_HANG_UP = (Phone.counter_party_hang_up,)
+
+    def make_callback_for(self, event_queue: queue.Queue[Event]) -> Callable[[], None]:
+        def _callback(*args: object) -> None:
+            event_queue.put_nowait(self)
+        return _callback
 
 
 class HardwareProtocol(Protocol):
@@ -111,8 +119,19 @@ class Hardware:
     PIN_RING = 17
     PIN_MODE = gpio.BCM
 
-    def __init__(self, event_queue: queue.Queue[Event]) -> None:
-        self.event_queue = event_queue
+    def __init__(
+        self,
+        on_receiver_down: Callable[[], None] = noop,
+        on_receiver_up: Callable[[], None] = noop,
+        on_dial_activate: Callable[[], None] = noop,
+        on_dial_deactivate: Callable[[], None] = noop,
+        on_dial_pulse: Callable[[], None] = noop,
+    ) -> None:
+        self.on_receiver_down = on_receiver_down
+        self.on_receiver_up = on_receiver_up
+        self.on_dial_activate = on_dial_activate
+        self.on_dial_deactivate = on_dial_deactivate
+        self.on_dial_pulse = on_dial_pulse
 
     def setup(self) -> None:
         gpio.setmode(gpio.BCM)
@@ -140,19 +159,19 @@ class Hardware:
         # the event may have re-triggered. This most likely doesn't matter
         # because the timings aren't super tight on those old phones.
         if gpio.input(chanel) == gpio.HIGH:
-            self.event_queue.put_nowait(Event.DIAL_ACTIVATE)
+            self.on_dial_activate()
         else:
-            self.event_queue.put_nowait(Event.DIAL_DEACTIVATE)
+            self.on_dial_deactivate()
 
     def on_dial_pulse(self, chanel: int) -> None:
-        self.event_queue.put_nowait(Event.DIAL_PULSE)
+        self.on_dial_pulse()
 
     def on_receiver_toggle(self, chanel: int) -> None:
         # See comment on on_dial_active_toggle
         if gpio.input(chanel) == gpio.HIGH:
-            self.event_queue.put_nowait(Event.RECEIVER_UP)
+            self.on_receiver_up()
         else:
-            self.event_queue.put_nowait(Event.RECEIVER_DOWN)
+            self.on_receiver_down()
 
 
 class App:
@@ -191,7 +210,7 @@ class App:
         event = self.event_queue.get()
         log.debug(f"Hardware event: {event.name}")
         try:
-            event(self.phone)
+            event.callback(self.phone)
         except TransitionNotAllowed:
             log.debug(
                 f"Transition {event.name} is not allowed in {self.phone.current_state.name}, skipping"
@@ -199,16 +218,20 @@ class App:
 
 
 @contextlib.contextmanager
-def config_server() -> Iterable[None]:
-    subprocess.Popen([
-        sys.executable,
-        "-m",
-        "flask",
-        "--app",
-        "fetap.web_server",
-        "run",
-        "--host=0.0.0.0",
-    ])
+def config_server(phone_book_path: str) -> Iterable[None]:
+    subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "flask",
+            "--app",
+            "fetap.web_server",
+            "run",
+            "--host=0.0.0.0",
+            "--port=80",
+        ],
+        env={"PHONE_BOOK": phone_book_path}
+    )
     try:
         yield
     finally:
@@ -221,12 +244,14 @@ def phone_app(
     phone: Phone,
     pjsua_: pjsua.PJSua,
     hardware: Hardware,
+    phone_book: PhoneBook,
 ) -> Iterable[App]:
     app = App(
         event_queue=event_queue,
         phone=phone,
         pjsua_=pjsua_,
         hardware=hardware,
+        phone_book=phone_book,
     )
     app.start()
 
@@ -241,13 +266,36 @@ def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
     log.debug("Creating App")
     event_queue: queue.Queue[Event] = queue.Queue()
     pjsua_ = pjsua.PJSua(
-        on_incoming_call=lambda: event_queue.put_nowait(Event.INCOMING_CALL),
-        on_call_connected=lambda: event_queue.put_nowait(Event.CALL_CONNECTED),
-        on_call_hangup=lambda: event_queue.put_nowait(Event.COUNTER_PARTY_HANG_UP),
+        on_incoming_call=Event.INCOMING_CALL.make_callback_for(event_queue),
+        on_call_connected=Event.CALL_CONNECTED.make_callback_for(event_queue),
+        on_call_hangup=Event.COUNTER_PARTY_HANG_UP.make_callback_for(event_queue),
     )
     phone: Phone = Phone(pjsua_=pjsua_)
-    hardware = Hardware(event_queue)
+    hardware = Hardware(
+        on_dial_activate=Event.DIAL_ACTIVATE.make_callback_for(event_queue),
+        on_dial_deactivate=Event.DIAL_DEACTIVATE.make_callback_for(event_queue),
+        on_dial_pulse=Event.DIAL_PULSE.make_callback_for(event_queue),
+        on_receiver_down=Event.RECEIVER_DOWN.make_callback_for(event_queue),
+        on_receiver_up=Event.RECEIVER_UP.make_callback_for(event_queue),
+    )
     phone_book = PhoneBook(file_path=phone_book_path)
 
-    with config_server(), phone_app(event_queue, phone, pjsua_, hardware, phone_book) as app:
+    with config_server(phone_book_path), phone_app(
+        event_queue, phone, pjsua_, hardware, phone_book
+    ) as app:
         yield app
+
+
+def hardware_test() -> None:
+    hardware = Hardware(
+        on_dial_activate=lambda: print("dial_activate"),
+        on_dial_deactivate=lambda: print("dial_deactivate"),
+        on_dial_pulse=lambda: print("dial_pulse"),
+        on_receiver_down=lambda: print("receiver_down"),
+        on_receiver_up=lambda: print("receiver_up"),
+    )
+    hardware.setup()
+    try:
+        time.sleep(9999)
+    finally:
+        hardware.cleanup()
