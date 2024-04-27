@@ -1,12 +1,14 @@
 import os
 from flask import Flask, current_app, render_template
 
-from fetap.storage import PhoneBook
+from fetap import storage, logging
 
 
 def create_app() -> Flask:
+    logging.configure()
+
     app = Flask(__name__)
-    app.phone_book = PhoneBook(file_path=os.environ["PHONE_BOOK"])
+    app.phone_book = storage.PhoneBook(file_path=os.environ["PHONE_BOOK"])
     return app
 
 app = create_app()

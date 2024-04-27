@@ -219,17 +219,19 @@ class App:
 
 @contextlib.contextmanager
 def config_server(phone_book_path: str) -> Iterable[None]:
+    command = [
+        sys.executable,
+        "-m",
+        "flask",
+        "--app",
+        "fetap.web_server",
+        "run",
+        "--host=0.0.0.0",
+        "--port=8000",
+    ]
+    log.info("Starting settings server with '%s'", " ".join(command))
     subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "flask",
-            "--app",
-            "fetap.web_server",
-            "run",
-            "--host=0.0.0.0",
-            "--port=80",
-        ],
+        command,
         env={"PHONE_BOOK": phone_book_path}
     )
     try:

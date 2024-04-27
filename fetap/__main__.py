@@ -9,11 +9,10 @@ def cli() -> None:
 
 @cli.command
 def run() -> None:
-    print("Started")
-    from fetap import main
+    from fetap import main, logging
     import os
-    import logging
-    logging.basicConfig(format="{threadName}: {message}", style="{", level=logging.DEBUG, force=True)
+
+    logging.configure()
     
     os.environ["ALSA_CARD"] = "Device"
     with main.create_app() as app:
