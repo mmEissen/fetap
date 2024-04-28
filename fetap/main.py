@@ -2,6 +2,8 @@ from __future__ import annotations
 import contextlib
 
 import enum
+import os
+import signal
 import subprocess
 import sys
 import time
@@ -20,8 +22,49 @@ from fetap.conman import gpio
 from fetap import pjsua
 
 
+def run() -> None:
+    from fetap import logging as fetap_logging
+
+    fetap_logging.configure()
+
+    kill_zombies()
+
+    os.environ["ALSA_CARD"] = "Device"
+    with create_app() as app:
+        app.run_forever()
+
+
+def kill_zombies(attempts: int = 3, delay: float = 3) -> bool:
+    my_pid = os.getpid()
+    parent_pid = os.getppid()
+    install_dir = os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))
+    for i in reversed(range(attempts)):
+        result = subprocess.run(
+            ["ps", "-eo", "pid,args"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        found_zombie = False
+        for line in result.stdout.splitlines():
+            pid_s, command = line.strip().split(" ", 1)
+            if not command.strip().startswith(install_dir):
+                continue
+            pid = int(pid_s.strip())
+            if pid in (parent_pid, my_pid):
+                continue
+            log.info("Killing zombie (%s)", pid)
+            os.kill(pid, signal.SIGTERM if i > 0 else signal.SIGKILL)
+            found_zombie = True
+        if not found_zombie:
+            log.info("Killed all zombies!")
+            return
+        time.sleep(delay)
+
+
 def noop() -> None:
     return
+
 
 class Phone(StateMachine):
     idle = State(initial=True)
@@ -104,6 +147,7 @@ class Event(_Event, enum.Enum):
     def make_callback_for(self, event_queue: queue.Queue[Event]) -> Callable[[], None]:
         def _callback(*args: object) -> None:
             event_queue.put_nowait(self)
+
         return _callback
 
 
@@ -230,10 +274,7 @@ def config_server(phone_book_path: str) -> Iterable[None]:
         "--port=8000",
     ]
     log.info("Starting settings server with '%s'", " ".join(command))
-    subprocess.Popen(
-        command,
-        env={"PHONE_BOOK": phone_book_path}
-    )
+    subprocess.Popen(command, env={"PHONE_BOOK": phone_book_path})
     try:
         yield
     finally:

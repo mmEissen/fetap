@@ -1,5 +1,5 @@
 import os
-from flask import Flask, current_app, render_template
+from flask import Flask, current_app, render_template, request, redirect, url_for
 
 from fetap import storage, logging
 
@@ -14,21 +14,31 @@ def create_app() -> Flask:
 app = create_app()
 
 @app.route("/")
-def settings_page():
-    return render_template("settings.html")
+def home_page():
+    phone_book: storage.PhoneBook = current_app.phone_book
+    return render_template("list_numbers.html", entries=phone_book.list_all())
 
-@app.route("/numbers")
-def list_numbers():
-    return (
-        "<table>"
-            "<tr>"
-                "<th>number</th>"
-                "<th>address</th>"
-            "</tr>" 
-            + "\n".join(
-                f"<tr><td>{number}</td><td>{address}</td></tr>"
-                for number, address in current_app.phone_book.list_all()
-            ) + "</table>"
-        + "<table>"
-    )
+@app.route("/add-number", methods=["GET", "POST"])
+def add_number():
+    if request.method == "POST":
+        return add_number_post()
+    return render_template("add_number.html")
 
+def add_number_post():
+    address = request.form.get("address")
+    number = request.form.get("number")
+
+    if address is None or number is None:
+        return 400, "address and number can't be None"
+    address = str(address)
+    number = str(number)
+
+    phone_book: storage.PhoneBook = current_app.phone_book
+    try:
+        phone_book.insert(number, address)
+    except storage.NumberExists:
+        return 400, "Number exists"
+    except storage.AddressExists:
+        return 400, "address exists"
+
+    return redirect(url_for("home_page"))

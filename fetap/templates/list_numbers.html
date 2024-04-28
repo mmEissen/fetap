@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}Numbers{% endblock %}
+{% block content %}
+<h1>Numbers</h1>
+<a href="{{ url_for('add_number') }}">Add Number</a>
+<table>
+    <thead>
+        <th>Number</th>
+        <th>Address</th>
+        <th>Delete</th>
+    </thead>
+    {% for number, address in entries %}
+    <tr>
+        <td>{{number}}</td>
+        <td>{{address}}</td>
+        <td>X</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

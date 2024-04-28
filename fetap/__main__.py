@@ -9,14 +9,9 @@ def cli() -> None:
 
 @cli.command
 def run() -> None:
-    from fetap import main, logging
-    import os
+    from fetap import main
 
-    logging.configure()
-    
-    os.environ["ALSA_CARD"] = "Device"
-    with main.create_app() as app:
-        app.run_forever()
+    main.run()
 
 
 @cli.command

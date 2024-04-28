@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block title %}Add Number{% endblock %}
+{% block content %}
+<h1>Add Number</h1>
+<a href="{{ url_for('home_page') }}">back</a>
+<form action="{{ url_for('add_number') }}", method="post">
+    <label for="address">Address:</label><br>
+    <input type="text" id="address" name="address"><br>
+    <label for="number">Number:</label><br>
+    <input type="text" id="number" name="number"><br>
+    <input type="submit" value="Add Number">
+</form>
+{% endblock %}
