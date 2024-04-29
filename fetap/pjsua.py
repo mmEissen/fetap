@@ -149,6 +149,8 @@ class PJSua:
         new_state = self._infer_call_state(response)
         if new_state is self._call_state:
             return
+        
+        log.debug("Inferred new call state %s from response:\n%s", new_state, response)
 
         if new_state is CallState.INCOMING:
             self._on_incoming_call()
@@ -203,7 +205,6 @@ class PJSua:
     def send_command(self, command: str, timeout=_STDOUT_TIMEOUT) -> str:
         self._command_queue.put_nowait((command, timeout))
         response = self._responses_queue.get(timeout=timeout)
-        print(response)
         return response
 
     def call(self, address: str) -> None:
@@ -214,7 +215,6 @@ class PJSua:
 
     def call_list(self) -> None:
         response = self.send_command("call list")
-        print(response)
         return self._infer_call_state(response)
 
     def hangup_all(self) -> None:

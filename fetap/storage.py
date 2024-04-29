@@ -46,7 +46,7 @@ class PhoneBook:
         try:
             return self._addresses_to_numbers[address]
         except KeyError as e:
-            raise NumberDoesNotExist() from e
+            raise AddressDoesNotExist() from e
     
     def get_address(self, number: str, should_reload: bool=True) -> str:
         if should_reload:
@@ -55,7 +55,7 @@ class PhoneBook:
         try:
             return self._numbers_to_addresses[number]
         except KeyError as e:
-            raise AddressDoesNotExist() from e
+            raise NumberDoesNotExist() from e
 
     def del_address(self, address: str) -> None:
         with self._file_lock:
@@ -74,13 +74,13 @@ class PhoneBook:
             self._maybe_reload_phone_book()
             try:
                 self.get_address(address, should_reload=False)
-            except AddressDoesNotExist:
+            except NumberDoesNotExist:
                 pass
             else:
                 raise AddressExists()
             try:
                 self.get_number(number, should_reload=False)
-            except NumberDoesNotExist:
+            except AddressDoesNotExist:
                 pass
             else:
                 raise NumberExists()

@@ -14,7 +14,7 @@ import queue
 
 import logging
 
-from fetap.storage import PhoneBook
+from fetap import storage
 
 log = logging.getLogger(__name__)
 
@@ -92,19 +92,27 @@ class Phone(StateMachine):
     dial_pulse = dial_active.to(dial_active, internal=True)
     call_received = idle.to(ringing)
 
-    def __init__(self, pjsua_: pjsua.PJSua, number_length: int = 6):
+    def __init__(self, pjsua_: pjsua.PJSua, phone_book: storage.PhoneBook, number_length: int = 6):
         self.current_dial_digit = 10
         self.dialed_number = ""
         self.number_length = number_length
         self.pjsua = pjsua_
+        self.phone_book = phone_book
         super().__init__()
 
     def on_enter_dial_active(self) -> None:
         self.current_dial_digit = 10
 
+    def on_enter_in_call(self) -> None:
+        self.pjsua.accept_call()
+
     def on_enter_connecting(self) -> None:
-        if self.dialed_number == "1231234":
-            self.pjsua.call("192.168.2.223")
+        try:
+            address = self.phone_book.get_address(self.dialed_number)
+        except storage.NumberDoesNotExist:
+            return
+        log.info("Placing call to %s", address)
+        self.pjsua.call(address)
 
     def after_dial_pulse(self) -> None:
         self.current_dial_digit += 1
@@ -231,7 +239,6 @@ class App:
         phone: Phone,
         pjsua_: pjsua.PJSua,
         hardware: Hardware,
-        phone_book: PhoneBook,
     ) -> None:
         self.event_queue = event_queue
         self.phone = phone
@@ -287,14 +294,12 @@ def phone_app(
     phone: Phone,
     pjsua_: pjsua.PJSua,
     hardware: Hardware,
-    phone_book: PhoneBook,
 ) -> Iterable[App]:
     app = App(
         event_queue=event_queue,
         phone=phone,
         pjsua_=pjsua_,
         hardware=hardware,
-        phone_book=phone_book,
     )
     app.start()
 
@@ -313,7 +318,8 @@ def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
         on_call_connected=Event.CALL_CONNECTED.make_callback_for(event_queue),
         on_call_hangup=Event.COUNTER_PARTY_HANG_UP.make_callback_for(event_queue),
     )
-    phone: Phone = Phone(pjsua_=pjsua_)
+    phone_book = storage.PhoneBook(file_path=phone_book_path)
+    phone: Phone = Phone(pjsua_=pjsua_, phone_book=phone_book)
     hardware = Hardware(
         on_dial_activate=Event.DIAL_ACTIVATE.make_callback_for(event_queue),
         on_dial_deactivate=Event.DIAL_DEACTIVATE.make_callback_for(event_queue),
@@ -321,10 +327,9 @@ def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
         on_receiver_down=Event.RECEIVER_DOWN.make_callback_for(event_queue),
         on_receiver_up=Event.RECEIVER_UP.make_callback_for(event_queue),
     )
-    phone_book = PhoneBook(file_path=phone_book_path)
 
     with config_server(phone_book_path), phone_app(
-        event_queue, phone, pjsua_, hardware, phone_book
+        event_queue, phone, pjsua_, hardware
     ) as app:
         yield app
 
