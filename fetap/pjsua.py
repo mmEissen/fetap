@@ -4,6 +4,7 @@ import enum
 import queue
 import subprocess
 import threading
+import time
 from typing import Callable, Iterable
 import requests
 from os import path
@@ -127,6 +128,7 @@ class PJSua:
                     self._stdout_queue.get(timeout=timeout)
                 )
             self._check_calls()
+            time.sleep(0.5)
 
     def _infer_call_state(self, call_list_response: str) -> CallState:
         current_call_lines = call_list_response.split("\n")[1:]

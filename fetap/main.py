@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import time
 from typing import Callable, Iterable, Protocol
 from statemachine import StateMachine, State
@@ -83,7 +84,7 @@ class Phone(StateMachine):
         | dial_active.to(idle)
         | disconnected.to(idle)
     )
-    counter_party_hang_up = in_call.to(disconnected) | ringing.to(idle)
+    counter_party_hang_up = in_call.to(disconnected) | ringing.to(idle) | connecting.to(disconnected)
     activate_dial = awaiting_dial_input.to(dial_active)
     deactivate_dial = dial_active.to(
         awaiting_dial_input, unless="is_last_digit"
@@ -92,12 +93,16 @@ class Phone(StateMachine):
     dial_pulse = dial_active.to(dial_active, internal=True)
     call_received = idle.to(ringing)
 
-    def __init__(self, pjsua_: pjsua.PJSua, phone_book: storage.PhoneBook, number_length: int = 6):
+    def __init__(
+        self, pjsua_: pjsua.PJSua, phone_book: storage.PhoneBook, hardware: Hardware, number_length: int = 6,
+    ):
         self.current_dial_digit = 10
         self.dialed_number = ""
         self.number_length = number_length
         self.pjsua = pjsua_
         self.phone_book = phone_book
+        self.hardware = hardware
+        self._is_initial = True
         super().__init__()
 
     def on_enter_dial_active(self) -> None:
@@ -128,9 +133,21 @@ class Phone(StateMachine):
 
     def on_exit_in_call(self) -> None:
         self.pjsua.hangup_all()
+    
+    def on_enter_idle(self) -> None:
+        if self._is_initial:
+            self._is_initial = False
+            return
+        self.pjsua.hangup_all()
 
     def is_last_digit(self) -> bool:
         return len(self.dialed_number) == self.number_length
+    
+    def on_enter_ringing(self) -> None:
+        self.hardware.start_ringing()
+
+    def on_exit_ringing(self) -> None:
+        self.hardware.stop_ringing()
 
 
 class PhoneEvent(Protocol):
@@ -184,6 +201,8 @@ class Hardware:
         self.on_dial_activate = on_dial_activate
         self.on_dial_deactivate = on_dial_deactivate
         self.on_dial_pulse = on_dial_pulse
+        self._stop_ringing_event = threading.Event()
+        self._ring_thread: threading.Thread | None = None
 
     def setup(self) -> None:
         gpio.setmode(gpio.BCM)
@@ -224,6 +243,41 @@ class Hardware:
             self.on_receiver_up()
         else:
             self.on_receiver_down()
+
+    def _ring(
+        self,
+        on_time: float = 0.01,
+        off_time: float = 0.01,
+        ring_time: float = 1,
+        pause_time: float = 1,
+        n: int = 3,
+        long_pause_time: float = 2,
+    ) -> None:
+        while not self._stop_ringing_event.is_set():
+            for _ in range(n):
+                for _ in range(int(ring_time / (on_time + off_time))):
+                    gpio.output(self.PIN_RING, gpio.HIGH)
+                    time.sleep(on_time)
+                    gpio.output(self.PIN_RING, gpio.LOW)
+                    time.sleep(off_time)
+                    if self._stop_ringing_event.is_set():
+                        return
+                time.sleep(pause_time * (not self._stop_ringing_event.is_set()))
+            time.sleep(long_pause_time * (not self._stop_ringing_event.is_set()))
+
+    def start_ringing(self) -> None:
+        if self._ring_thread is not None:
+            return
+        self._stop_ringing_event = threading.Event()
+        self._ring_thread = threading.Thread(target=self._ring, name="ring", daemon=True)
+        self._ring_thread.start()
+
+    def stop_ringing(self) -> None:
+        if self._ring_thread is None:
+            return
+        self._stop_ringing_event.set()
+        self._ring_thread.join()
+        self._ring_thread = None
 
 
 class App:
@@ -318,8 +372,6 @@ def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
         on_call_connected=Event.CALL_CONNECTED.make_callback_for(event_queue),
         on_call_hangup=Event.COUNTER_PARTY_HANG_UP.make_callback_for(event_queue),
     )
-    phone_book = storage.PhoneBook(file_path=phone_book_path)
-    phone: Phone = Phone(pjsua_=pjsua_, phone_book=phone_book)
     hardware = Hardware(
         on_dial_activate=Event.DIAL_ACTIVATE.make_callback_for(event_queue),
         on_dial_deactivate=Event.DIAL_DEACTIVATE.make_callback_for(event_queue),
@@ -327,6 +379,8 @@ def create_app(phone_book_path: str = "phone_book.json") -> Iterable[App]:
         on_receiver_down=Event.RECEIVER_DOWN.make_callback_for(event_queue),
         on_receiver_up=Event.RECEIVER_UP.make_callback_for(event_queue),
     )
+    phone_book = storage.PhoneBook(file_path=phone_book_path)
+    phone: Phone = Phone(pjsua_=pjsua_, phone_book=phone_book, hardware=hardware)
 
     with config_server(phone_book_path), phone_app(
         event_queue, phone, pjsua_, hardware
