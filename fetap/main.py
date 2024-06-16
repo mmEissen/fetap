@@ -205,7 +205,7 @@ class Hardware:
         self._ring_thread: threading.Thread | None = None
 
     def setup(self) -> None:
-        gpio.setmode(gpio.BCM)
+        gpio.setmode(self.PIN_MODE)
 
         gpio.setup(self.PIN_RECEIVER, gpio.IN, pull_up_down=gpio.PUD_DOWN)
         gpio.add_event_detect(self.PIN_RECEIVER, gpio.BOTH, bouncetime=50)
@@ -281,12 +281,6 @@ class Hardware:
 
 
 class App:
-    PIN_RECEIVER = 26
-    PIN_DIAL_ACTIVE = 22
-    PIN_DIAL_PULSE = 27
-    PIN_RING = 17
-    PIN_MODE = gpio.BCM
-
     def __init__(
         self,
         event_queue: queue.Queue[Event],
