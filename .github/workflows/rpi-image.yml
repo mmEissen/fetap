@@ -71,10 +71,10 @@ jobs:
           github-token: ${{ github.token }}
       
           # Host name of the image.
-          hostname: fetap
+          hostname: fetappi
       
           # Final image name.
-          image-name: fetap
+          image-name: fetapos
       
           # Enabling this option will remove plenty of components from the GitHub Actions 
           # runner that are not mandatory pre-requisites for a (vanilla) pi-gen build. This 
@@ -102,7 +102,7 @@ jobs:
       
           # The release name to use in `/etc/issue.txt`. The default should only be used for 
           # official Raspberry Pi builds.
-          pi-gen-release: Raspberry Pi Fetap
+          pi-gen-release: Fetap OS
       
           # GitHub repository to fetch pi-gen from, must be a fork from RPi-Distro/pi-gen.
           pi-gen-repository: mmEissen/pi-gen-fetap
