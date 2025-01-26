@@ -24,8 +24,8 @@ jobs:
         id: push
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./fetap-server
-          file: ./fetap-server/Dockerfile
+          context: ./server/fetap-server
+          file: ./server/fetap-server/Dockerfile
           push: true
           tags: mmeissen/fetap-server:latest,mmeissen/fetap-server:${{ github.sha }}
 
