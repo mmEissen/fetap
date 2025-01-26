@@ -29,3 +29,33 @@ jobs:
           push: true
           tags: mmeissen/fetap-server:latest,mmeissen/fetap-server:${{ github.sha }}
 
+  deploy_server:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: fetap.net
+          username: momo
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: server/docker-compose-prod.yml
+          target: /home/momo/usb2/server
+
+      - name: Deploy via ssh
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: fetap.net
+          username: momo
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/momo/usb2/server
+            docker compose -f docker-compose-prod.yml down
+            docker compose up -d --pull always --remove-orphans -y
+            docker system prune --all --force
+
+
+

@@ -1,0 +1,4 @@
+services:
+  web:
+    image: mmeissen/fetap-server:latest
+    restart: always
