@@ -27,5 +27,5 @@ jobs:
           context: ./fetap-server
           file: ./fetap-server/Dockerfile
           push: true
-          tags: https://hub.docker.com/u/mmeissen/fetap-server:latest,https://hub.docker.com/u/mmeissen/fetap-server:${{ github.sha }}
+          tags: mmeissen/fetap-server:latest,mmeissen/fetap-server:${{ github.sha }}
 
