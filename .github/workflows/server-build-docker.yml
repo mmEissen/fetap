@@ -56,7 +56,7 @@ jobs:
           script: |
             cd /home/momo/usb2/server
             docker compose -f docker-compose-prod.yml down
-            docker compose up -d --pull always --remove-orphans
+            docker compose -f docker-compose-prod.yml up -d --pull always --remove-orphans
             docker system prune --all --force
 
 
