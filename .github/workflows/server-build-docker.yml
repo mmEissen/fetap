@@ -3,8 +3,33 @@ name: Deploy Server
 on: 
   push:
     branches: ["main"]
+
 jobs:
-  build_docker_images:
+  build_device_docker_images:
+    strategy:
+      matrix:
+        service-name:
+          - fetap-core
+    runs-on: [self-hosted, arm64]
+    name: Build and push ${{ matrix.service-name }}
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if files changed
+        uses: marceloprado/has-changed-path@v1.0.1
+        id: service-changed
+        with:
+          paths: device/${{ matrix.service-name }}
+
+  build_server_docker_images:
     strategy:
       matrix:
         service-name:
@@ -45,8 +70,8 @@ jobs:
           push: true
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
-  deploy:
-    needs: [build_docker_images]
+  deploy_server:
+    needs: [build_server_docker_images]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
