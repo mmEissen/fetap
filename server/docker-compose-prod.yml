@@ -6,3 +6,8 @@ services:
   nginx:
     image: mmeissen/fetap-nginx:latest
     restart: always
+    ports:
+      - "80:80"
+    environment:
+      - NGINX_HOST=fetap.net
+      - NGINX_PORT=80
