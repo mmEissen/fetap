@@ -1,10 +1,15 @@
-name: Build Server Docker Image
+name: Deploy Server
 
 on: [push]
 jobs:
-  build:
+  build_docker_images:
+    strategy:
+      matrix:
+        service-name:
+          - fetap-nginx
+          - fetap-server
     runs-on: [self-hosted, arm64]
-    name: Build Docker image and push to Docker Hub
+    name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
       contents: read
@@ -24,13 +29,13 @@ jobs:
         id: push
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./server/fetap-server
-          file: ./server/fetap-server/Dockerfile
+          context: ./server/${{ matrix.service-name }}
+          file: ./server/${{ matrix.service-name }}/Dockerfile
           push: true
-          tags: mmeissen/fetap-server:latest,mmeissen/fetap-server:${{ github.sha }}
+          tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
-  deploy_server:
-    needs: [build]
+  deploy:
+    needs: [build_fetap_nginx]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code

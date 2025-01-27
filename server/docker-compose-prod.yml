@@ -2,3 +2,7 @@ services:
   web:
     image: mmeissen/fetap-server:latest
     restart: always
+  
+  nginx:
+    image: mmeissen/fetap-nginx:latest
+    restart: always
