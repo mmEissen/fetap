@@ -71,7 +71,7 @@ jobs:
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
   deploy_server:
-    needs: [build_server_docker_images]
+    needs: [build_server_docker_images, build_device_docker_images]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
