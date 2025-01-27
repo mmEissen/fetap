@@ -8,6 +8,27 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     environment:
       - NGINX_HOST=fetap.net
       - NGINX_PORT=80
+    volumes:
+      - certbot-www:/var/www/certbot/:ro
+      - certbot-conf:/etc/nginx/ssl/:ro
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+
+  # certbot_restarter:
+  #   image: docker:cli
+  #   volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+  #   command: ["/bin/sh", "-c", "while true; do sleep 43200; docker restart acme_sh_1; done"]
+  #   restart: unless-stopped
+
+volumes:
+  acme-challenge:
+  certbot-www:
+  certbot-conf:

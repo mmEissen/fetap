@@ -35,6 +35,7 @@ jobs:
         service-name:
           - fetap-nginx
           - fetap-server
+          - fetap-certbot
     runs-on: [self-hosted, arm64]
     name: Build and push ${{ matrix.service-name }}
     permissions:

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from os import path
 import subprocess
 import threading
 
@@ -9,7 +10,9 @@ import urllib.error
 import urllib.request
 
 
-FETAP_BASE_URL = "https://fetap.net/"
+COMPOSE_FILE_URL = "https://fetap.net/fetap-v1/docker-compose.yml"
+FETAP_DIR = path.dirname(__file__)
+COMPOSE_FILE_NAME = path.join(FETAP_DIR, "docker-compose.yml")
 
 
 def main() -> None:
@@ -30,6 +33,7 @@ def is_connected() -> bool:
         c.device == nmcli.IFNAME and c.name != nmcli.HOTSPOT_CONN_NAME
         for c in connections
     )
+
 
 _server_done = threading.Event()
 _bssid = ""
@@ -72,7 +76,9 @@ class WifiConfigRequestHandler(BaseHTTPRequestHandler):
     </body>
 </html>
 """
-    _OPTION_TEMPLATE = "<option style=\"font-family:monospace;\" value=\"{bssid}\">{description}</option>"
+    _OPTION_TEMPLATE = (
+        '<option style="font-family:monospace;" value="{bssid}">{description}</option>'
+    )
 
     _SUCCESS_HTML = """
 <!DOCTYPE html>
@@ -143,14 +149,16 @@ class WifiConfigRequestHandler(BaseHTTPRequestHandler):
             bars = min(round(strength / (100 / max_bars)), max_bars)
             return ("+" * bars).ljust(max_bars, "-")
 
-        content = self._FORM_HTML.format(options="\n".join(
-            self._OPTION_TEMPLATE.format(
-                bssid=wifi.bssid, 
-                description=f"|{bars(wifi.signal)}| {wifi.ssid} ({wifi.channel})"
+        content = self._FORM_HTML.format(
+            options="\n".join(
+                self._OPTION_TEMPLATE.format(
+                    bssid=wifi.bssid,
+                    description=f"|{bars(wifi.signal)}| {wifi.ssid} ({wifi.channel})",
+                )
+                for wifi in wifis
+                if wifi.ssid
             )
-            for wifi in wifis
-            if wifi.ssid
-        ))
+        )
 
         self.wfile.write(content.encode())
 
@@ -160,6 +168,32 @@ class WifiConfigRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         self.wfile.write(self._FAVICON)
+
+
+def get_latest_compose_file() -> None:
+    urllib.request.urlopen
+
+
+class docker_compose:
+
+
+    @classmethod
+    def _docker_compose(cls, *args: str) -> str:
+        return cls._run(
+            ["docker", "compose", "-f", path.join(FETAP_DIR, "docker-compose.yml")]
+            + list(args)
+        )
+
+    @staticmethod
+    def _run(command: list[str], env: Optional[dict[str, str]] = None) -> str:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            check=True,
+            text=True,
+            env=env,
+        )
+        return result.stdout
 
 
 class nmcli:
@@ -184,7 +218,6 @@ class nmcli:
             cls.Connection(name, uuid, _type, device)
             for name, uuid, _type, device in cls._split_output(output)
         ]
-
 
     @classmethod
     def con_up(cls, uuid: str) -> None:
