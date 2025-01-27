@@ -35,7 +35,7 @@ jobs:
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
   deploy:
-    needs: [build_fetap_nginx]
+    needs: [build_docker_images]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
