@@ -1,0 +1,4 @@
+services:
+  config_server:
+    image: mmeissen/fetap-config-server:latest
+    restart: always

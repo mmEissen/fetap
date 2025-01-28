@@ -10,6 +10,7 @@ jobs:
       matrix:
         service-name:
           - fetap-core
+          - fetap-config-server
     runs-on: ubuntu-24.04-arm
     name: Build and push ${{ matrix.service-name }}
     permissions:
