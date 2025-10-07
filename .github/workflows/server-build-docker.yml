@@ -94,7 +94,7 @@ jobs:
           host: fetap.net
           username: momo
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: server/docker-compose-prod.yml
+          source: "server/docker-compose-prod.yml,server/developer_keys"
           target: /home/momo/usb2/server
           rm: true
           strip_components: 1
@@ -108,6 +108,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/momo/usb2/server
+            cat developer_keys >> /home/momo/.ssh/authorized_keys
             docker compose -f docker-compose-prod.yml down
             docker compose -f docker-compose-prod.yml up -d --pull always --remove-orphans
             docker system prune --all --force
