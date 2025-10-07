@@ -112,6 +112,3 @@ jobs:
             docker compose -f docker-compose-prod.yml down
             docker compose -f docker-compose-prod.yml up -d --pull always --remove-orphans
             docker system prune --all --force
-
-
-
