@@ -37,6 +37,7 @@ jobs:
           - fetap-nginx
           - fetap-server
           - fetap-certbot
+          - fetap-asterisk
     runs-on: ubuntu-24.04-arm
     name: Build and push ${{ matrix.service-name }}
     permissions:
