@@ -1,0 +1,8 @@
+#!/bin/bash
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+pushd ${SCRIPT_DIR}/dev_cli > /dev/null
+
+poetry run python -m dev_cli "$@"
+
+popd > /dev/null
