@@ -10,7 +10,7 @@ RUN unzip asterisk.zip && rm -f asterisk.zip
 WORKDIR /asterisk-certified-20.7-cert7
 
 RUN ./contrib/scripts/install_prereq install
-RUN ./configure
+RUN ./configure CFLAGS="-march=armv8-a" CXXFLAGS="-march=armv8-a"
 RUN make
 RUN make install
 
