@@ -111,7 +111,7 @@ jobs:
             cd /home/momo/usb2/server
             mv -f authorized_keys /home/momo/.ssh/authorized_keys
             docker compose -f docker-compose-prod.yml down
-            docker compose pull --quiet
+            docker compose -f docker-compose-prod.yml pull --quiet
             docker compose -f docker-compose-prod.yml up -d --force-recreate --remove-orphans
             docker system prune --all --force
           command_timeout: 30m
