@@ -2,6 +2,9 @@ FROM debian:latest
 
 RUN apt-get update &&  apt-get install -y \
     build-essential \
+    gcc \
+    g++ \
+    make \
     curl \
     unzip
 
@@ -10,7 +13,7 @@ RUN unzip asterisk.zip && rm -f asterisk.zip
 WORKDIR /asterisk-certified-20.7-cert7
 
 RUN ./contrib/scripts/install_prereq install
-ENV CFLAGS="-O2 -mcpu=cortex-a72 -mno-crypto -mno-sve -mno-fp-armv8"
+ENV CFLAGS="-O2 -mcpu=cortex-a72"
 ENV CXXFLAGS="$CFLAGS"
 ENV LDFLAGS=""
 RUN ./configure
