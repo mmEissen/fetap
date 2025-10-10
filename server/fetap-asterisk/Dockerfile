@@ -17,6 +17,6 @@ RUN make install
 WORKDIR /
 RUN rm -rf /asterisk-certified-20.7-cert7
 
-COPY pjsip.conf /etc/asterisk/pjsip.conf
+COPY conf /etc/asterisk
 
 ENTRYPOINT [ "asterisk", "-f" ]
