@@ -110,7 +110,7 @@ jobs:
           script: |
             cd /home/momo/usb2/server
             mv -f authorized_keys /home/momo/.ssh/authorized_keys
-            docker compose --quiet -f docker-compose-prod.yml down
-            docker compose --quiet -f docker-compose-prod.yml up -d --pull always --remove-orphans
+            docker compose -f docker-compose-prod.yml down
+            docker compose -f docker-compose-prod.yml up -d --pull always --remove-orphans
             docker system prune --all --force
           command_timeout: 30m
