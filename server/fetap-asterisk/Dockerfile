@@ -6,7 +6,7 @@ RUN apt-get update &&  apt-get install -y \
     unzip
 
 RUN curl -o asterisk.zip -L https://github.com/asterisk/asterisk/archive/refs/tags/certified-20.7-cert7.zip
-RUN unzip asterisk.zip
+RUN unzip asterisk.zip && rm -f asterisk.zip
 WORKDIR /asterisk-certified-20.7-cert7
 
 RUN ./contrib/scripts/install_prereq install
