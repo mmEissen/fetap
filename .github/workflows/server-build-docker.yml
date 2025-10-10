@@ -86,7 +86,7 @@ jobs:
         uses: marceloprado/has-changed-path@v1.0.1
         id: server-changed
         with:
-          paths: server .gihthub/workflows
+          paths: server .github/workflows/server-build-docker.yml
 
       - name: Copy docker-compose.yml
         if: steps.server-changed.outputs.changed == 'true'
