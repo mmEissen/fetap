@@ -46,8 +46,8 @@ jobs:
         if: steps.service-changed.outputs.changed == 'true'
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./server/${{ matrix.service-name }}
-          file: ./server/${{ matrix.service-name }}/Dockerfile
+          context: ./device/${{ matrix.service-name }}
+          file: ./device/${{ matrix.service-name }}/Dockerfile
           push: true
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
