@@ -1,6 +1,6 @@
 FROM debian:latest
 
-RUN apt-get update &&  apt-get install -y \
+RUN apt-get update &&  apt-get install -y --no-install-recommends \
     make \
     cmake \
     pkg-config \
@@ -17,18 +17,19 @@ RUN apt-get update &&  apt-get install -y \
     curl \
     unzip
 
-RUN curl -Lo libre.zip https://github.com/baresip/re/archive/refs/tags/v4.1.0.zip \
+RUN curl -Lso libre.zip https://github.com/baresip/re/archive/refs/tags/v4.1.0.zip \
     && unzip libre.zip \
-    && rm libre.zip \
-    && cd re-4.1.0 \
+    && rm libre.zip
+
+RUN cd re-4.1.0 \
     && cmake -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j \
     && cmake --install build \
-    && ldconfig \
-    && cd / \
-    && rm -rf re-4.1.0
+    && ldconfig
 
-RUN curl -Lo baresip.zip https://github.com/baresip/baresip/archive/refs/tags/v4.1.0.zip \
+RUN rm -rf re-4.1.0
+
+RUN curl -Lso baresip.zip https://github.com/baresip/baresip/archive/refs/tags/v4.1.0.zip \
     && unzip baresip.zip \
     && rm baresip.zip
 
