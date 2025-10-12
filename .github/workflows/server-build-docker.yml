@@ -11,7 +11,11 @@ jobs:
         service-name:
           - fetap-core
           - fetap-config-server
-    runs-on: ubuntu-24.04-arm
+          - fetap-baresip
+        include:
+          - runs-on: ubuntu-24.04-arm
+          - runs-on: rpi-zero-2w
+            service-name: fetap-baresip
     name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
