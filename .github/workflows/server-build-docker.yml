@@ -13,9 +13,10 @@ jobs:
           - fetap-config-server
           - fetap-baresip
         include:
-          - runs-on: ubuntu-24.04-arm
-          - runs-on: rpi-zero-2w
+          - runner: ubuntu-24.04-arm
+          - runner: rpi-zero-2w
             service-name: fetap-baresip
+    runs-on: ${{ matrix.runner }}
     name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
