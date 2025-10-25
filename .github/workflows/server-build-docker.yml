@@ -5,14 +5,16 @@ on:
     branches: ["main"]
 
 jobs:
-  build_and_push_required_images:
+  build_and_push_baresip_1: &build_and_push_docker_image
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip-conf
+          - service-name: fetap-baresip
             directory: device
-    runs-on: rpi-zero-2w
-    name: Build and push ${{ matrix.service-name }}
+            target: prerequisites
+            requires: null
+    runs-on: ubuntu-24.04-arm
+    name: Build and Push ${{ matrix.service-name }} (${{ matrix.target }})
     permissions:
       packages: write
       contents: read
@@ -36,6 +38,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Pull Required Target
+        if: ${{ matrix.requires }}
+        run: |
+          docker pull mmeissen/${{ matrix.service-name }}-${{ matrix.requires }}
 
       - name: Build and push Docker image
         if: steps.service-changed.outputs.changed == 'true'
@@ -43,9 +50,20 @@ jobs:
         with:
           context: ./${{ matrix.directory }}/${{ matrix.service-name }}
           file: ./${{ matrix.directory }}/${{ matrix.service-name }}/Dockerfile
+          target: ${{ matrix.target }}
           push: true
-          tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
+          tags: mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:latest,mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:${{ github.sha }}
 
+  build_and_push_baresip_2:
+    <<: *build_and_push_docker_image
+    strategy:
+      matrix:
+        include:
+          - service-name: fetap-baresip
+            directory: device
+            target: re-configured
+            requires: prerequisites
+    runs-on: rpi-zero-2w
 
   build_docker_images:
     strategy:
@@ -54,8 +72,6 @@ jobs:
           - service-name: fetap-core
             directory: device
           - service-name: fetap-config-server
-            directory: device
-          - service-name: fetap-baresip
             directory: device
           - service-name: fetap-nginx
             directory: server
@@ -66,7 +82,6 @@ jobs:
           - service-name: fetap-asterisk
             directory: server
     runs-on: ubuntu-24.04-arm
-    needs: [build_and_push_required_images]
     name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
