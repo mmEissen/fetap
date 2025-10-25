@@ -5,18 +5,13 @@ on:
     branches: ["main"]
 
 jobs:
-  build_device_docker_images:
+  build_and_push_required_images:
     strategy:
       matrix:
-        service-name:
-          - fetap-core
-          - fetap-config-server
-          - fetap-baresip
         include:
-          - runner: ubuntu-24.04-arm
-          - runner: rpi-zero-2w
-            service-name: fetap-baresip
-    runs-on: ${{ matrix.runner }}
+          - service-name: fetap-baresip-conf
+            directory: device
+    runs-on: rpi-zero-2w
     name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
@@ -33,7 +28,7 @@ jobs:
         uses: marceloprado/has-changed-path@v1.0.1
         id: service-changed
         with:
-          paths: device/${{ matrix.service-name }}
+          paths: ${{ matrix.directory }}/${{ matrix.service-name }}
 
       - name: Log in to Docker Hub
         if: steps.service-changed.outputs.changed == 'true'
@@ -46,21 +41,32 @@ jobs:
         if: steps.service-changed.outputs.changed == 'true'
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./device/${{ matrix.service-name }}
-          file: ./device/${{ matrix.service-name }}/Dockerfile
+          context: ./${{ matrix.directory }}/${{ matrix.service-name }}
+          file: ./${{ matrix.directory }}/${{ matrix.service-name }}/Dockerfile
           push: true
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
 
-  build_server_docker_images:
+  build_docker_images:
     strategy:
       matrix:
-        service-name:
-          - fetap-nginx
-          - fetap-server
-          - fetap-certbot
-          - fetap-asterisk
+        include:
+          - service-name: fetap-core
+            directory: device
+          - service-name: fetap-config-server
+            directory: device
+          - service-name: fetap-baresip
+            directory: device
+          - service-name: fetap-nginx
+            directory: server
+          - service-name: fetap-server
+            directory: server
+          - service-name: fetap-certbot
+            directory: server
+          - service-name: fetap-asterisk
+            directory: server
     runs-on: ubuntu-24.04-arm
+    needs: [build_and_push_required_images]
     name: Build and push ${{ matrix.service-name }}
     permissions:
       packages: write
@@ -77,7 +83,7 @@ jobs:
         uses: marceloprado/has-changed-path@v1.0.1
         id: service-changed
         with:
-          paths: server/${{ matrix.service-name }}
+          paths: ${{ matrix.directory }}/${{ matrix.service-name }}
 
       - name: Log in to Docker Hub
         if: steps.service-changed.outputs.changed == 'true'
@@ -90,13 +96,13 @@ jobs:
         if: steps.service-changed.outputs.changed == 'true'
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./server/${{ matrix.service-name }}
-          file: ./server/${{ matrix.service-name }}/Dockerfile
+          context: ./${{ matrix.directory }}/${{ matrix.service-name }}
+          file: ./${{ matrix.directory }}/${{ matrix.service-name }}/Dockerfile
           push: true
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
   deploy_server:
-    needs: [build_server_docker_images, build_device_docker_images]
+    needs: [build_docker_images]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
