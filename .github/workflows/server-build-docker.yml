@@ -30,7 +30,7 @@ jobs:
         uses: marceloprado/has-changed-path@v1.0.1
         id: service-changed
         with:
-          paths: ${{ matrix.directory }}/${{ matrix.service-name }}
+          paths: ${{ matrix.directory }}/${{ matrix.service-name }} .github/workflows
 
       - name: Log in to Docker Hub
         if: steps.service-changed.outputs.changed == 'true'
@@ -63,6 +63,7 @@ jobs:
             target: re-configured
             requires: prerequisites
     runs-on: rpi-zero-2w
+    needs: build_and_push_baresip_1
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
