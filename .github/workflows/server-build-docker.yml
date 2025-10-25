@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 jobs:
-  build_and_push_baresip_1: &build_and_push_docker_image
+  build_and_push_baresip_1:
     strategy:
       matrix:
         include:
@@ -14,13 +14,13 @@ jobs:
             target: prerequisites
             requires: null
     runs-on: ubuntu-24.04-arm
-    name: Build and Push ${{ matrix.service-name }} (${{ matrix.target }})
-    permissions:
+    name: &baresip_name Build and Push ${{ matrix.service-name }} (${{ matrix.target }})
+    permissions: &baresip_permissions
       packages: write
       contents: read
       attestations: write
       id-token: write
-    steps:
+    steps: &baresip_steps
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
@@ -55,7 +55,6 @@ jobs:
           tags: mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:latest,mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:${{ github.sha }}
 
   build_and_push_baresip_2:
-    <<: *build_and_push_docker_image
     strategy:
       matrix:
         include:
@@ -64,6 +63,9 @@ jobs:
             target: re-configured
             requires: prerequisites
     runs-on: rpi-zero-2w
+    name: *baresip_name
+    permissions: *baresip_permissions
+    steps: *baresip_steps
 
   build_docker_images:
     strategy:
