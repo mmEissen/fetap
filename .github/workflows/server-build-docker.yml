@@ -69,7 +69,7 @@ jobs:
             directory: device
             target: re-installed
     runs-on: ubuntu-24.04-arm
-    needs: build_and_push_baresip_1
+    needs: build_and_push_baresip_2
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
@@ -82,7 +82,7 @@ jobs:
             directory: device
             target: baresip-configured
     runs-on: rpi-zero-2w
-    needs: build_and_push_baresip_1
+    needs: build_and_push_baresip_3
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
@@ -95,7 +95,7 @@ jobs:
             directory: device
             target: final
     runs-on: rpi-zero-2w
-    needs: build_and_push_baresip_1
+    needs: build_and_push_baresip_4
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
