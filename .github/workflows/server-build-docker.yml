@@ -87,7 +87,7 @@ jobs:
     permissions: *baresip_permissions
     steps: *baresip_steps
   
-  build_and_push_baresip_4:
+  build_and_push_baresip_5:
     strategy:
       matrix:
         include:
