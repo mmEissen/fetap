@@ -12,7 +12,6 @@ jobs:
           - service-name: fetap-baresip
             directory: device
             target: prerequisites
-            requires: null
     runs-on: ubuntu-24.04-arm
     name: &baresip_name Build and Push ${{ matrix.service-name }} (${{ matrix.target }})
     permissions: &baresip_permissions
@@ -38,11 +37,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Pull Required Target
-        if: ${{ matrix.requires }}
-        run: |
-          docker pull mmeissen/${{ matrix.service-name }}-${{ matrix.requires }}
 
       - name: Build and push Docker image
         if: steps.service-changed.outputs.changed == 'true'
@@ -61,7 +55,45 @@ jobs:
           - service-name: fetap-baresip
             directory: device
             target: re-configured
-            requires: prerequisites
+    runs-on: rpi-zero-2w
+    needs: build_and_push_baresip_1
+    name: *baresip_name
+    permissions: *baresip_permissions
+    steps: *baresip_steps
+  
+  build_and_push_baresip_3:
+    strategy:
+      matrix:
+        include:
+          - service-name: fetap-baresip
+            directory: device
+            target: re-installed
+    runs-on: ubuntu-24.04-arm
+    needs: build_and_push_baresip_1
+    name: *baresip_name
+    permissions: *baresip_permissions
+    steps: *baresip_steps
+  
+  build_and_push_baresip_4:
+    strategy:
+      matrix:
+        include:
+          - service-name: fetap-baresip
+            directory: device
+            target: baresip-configured
+    runs-on: rpi-zero-2w
+    needs: build_and_push_baresip_1
+    name: *baresip_name
+    permissions: *baresip_permissions
+    steps: *baresip_steps
+  
+  build_and_push_baresip_4:
+    strategy:
+      matrix:
+        include:
+          - service-name: fetap-baresip
+            directory: device
+            target: final
     runs-on: rpi-zero-2w
     needs: build_and_push_baresip_1
     name: *baresip_name
@@ -119,45 +151,45 @@ jobs:
           push: true
           tags: mmeissen/${{ matrix.service-name }}:latest,mmeissen/${{ matrix.service-name }}:${{ github.sha }}
 
-  deploy_server:
-    needs: [build_docker_images]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # deploy_server:
+  #   needs: [build_docker_images]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
       
-      - name: Check if files changed
-        uses: marceloprado/has-changed-path@v1.0.1
-        id: server-changed
-        with:
-          paths: server .github/workflows/server-build-docker.yml
+  #     - name: Check if files changed
+  #       uses: marceloprado/has-changed-path@v1.0.1
+  #       id: server-changed
+  #       with:
+  #         paths: server .github/workflows/server-build-docker.yml
 
-      - name: Copy docker-compose.yml
-        if: steps.server-changed.outputs.changed == 'true'
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: fetap.net
-          username: momo
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "server/docker-compose-prod.yml,server/authorized_keys"
-          target: /home/momo/usb2/server
-          rm: true
-          strip_components: 1
+  #     - name: Copy docker-compose.yml
+  #       if: steps.server-changed.outputs.changed == 'true'
+  #       uses: appleboy/scp-action@v0.1.7
+  #       with:
+  #         host: fetap.net
+  #         username: momo
+  #         key: ${{ secrets.SERVER_SSH_KEY }}
+  #         source: "server/docker-compose-prod.yml,server/authorized_keys"
+  #         target: /home/momo/usb2/server
+  #         rm: true
+  #         strip_components: 1
 
-      - name: Deploy via ssh
-        if: steps.server-changed.outputs.changed == 'true'
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: fetap.net
-          username: momo
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /home/momo/usb2/server
-            mv -f authorized_keys /home/momo/.ssh/authorized_keys
-            docker compose -f docker-compose-prod.yml down
-            docker compose -f docker-compose-prod.yml pull --quiet
-            docker compose -f docker-compose-prod.yml up -d --force-recreate --remove-orphans
-            docker system prune --all --force
-          command_timeout: 30m
+  #     - name: Deploy via ssh
+  #       if: steps.server-changed.outputs.changed == 'true'
+  #       uses: appleboy/ssh-action@v1.2.0
+  #       with:
+  #         host: fetap.net
+  #         username: momo
+  #         key: ${{ secrets.SERVER_SSH_KEY }}
+  #         script: |
+  #           cd /home/momo/usb2/server
+  #           mv -f authorized_keys /home/momo/.ssh/authorized_keys
+  #           docker compose -f docker-compose-prod.yml down
+  #           docker compose -f docker-compose-prod.yml pull --quiet
+  #           docker compose -f docker-compose-prod.yml up -d --force-recreate --remove-orphans
+  #           docker system prune --all --force
+  #         command_timeout: 30m

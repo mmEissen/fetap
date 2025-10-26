@@ -29,13 +29,13 @@ RUN curl -Lso baresip.zip https://github.com/baresip/baresip/archive/refs/tags/v
     && rm baresip.zip
 
 
-FROM prerequisites AS re-configured
+FROM mmeissen/fetap-baresip-prerequisites:latest AS re-configured
 
 RUN cd /re \
     && cmake -B build -DCMAKE_BUILD_TYPE=Release
 
 
-FROM re-configured AS re-installed
+FROM mmeissen/fetap-baresip-re-configured:latest AS re-installed
 
 RUN cd re \
     && cmake --build build -j \
@@ -43,12 +43,12 @@ RUN cd re \
     && ldconfig
 
 
-FROM re-installed AS baresip-configured
+FROM mmeissen/fetap-baresip-re-installed:latest AS baresip-configured
 
 RUN cd /baresip \
     && cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-FROM baresip-configured AS baresip
+FROM mmeissen/fetap-baresip-baresip-configured:latest AS final
 
 RUN cd /baresip \
     && cmake --build build -j \
