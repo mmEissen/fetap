@@ -1,4 +1,12 @@
 # syntax=docker/dockerfile:1
+
+# A very janky setup for cross compiling baresip for the rpi zero 2w:
+# The dockerfile is split in such a way, that I can run the cmake configure steps on the
+# rpi zero and all other steps on a github runner (check out the github workflow).
+# The proper way to set this up would be to add a cmake cross compiling configuration
+# as described here: https://cmake.org/cmake/help/book/mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html
+# I However I am not sure how to configure everything correctly for the rpi zero 2w at the moment
+# and this is a hacky workaround to figuring that out.
 FROM debian:latest AS prerequisites
 
 RUN apt-get update &&  apt-get install -y --no-install-recommends \
@@ -52,6 +60,9 @@ FROM mmeissen/fetap-baresip-baresip-configured:latest AS final
 
 RUN cd /baresip \
     && cmake --build build -j \
-    && cmake --install build
+    && cmake --install build \
+    && ldconfig
 
-ENTRYPOINT [ "baresip" ]
+COPY config /config
+
+ENTRYPOINT [ "baresip", "-f", "/config" ]
