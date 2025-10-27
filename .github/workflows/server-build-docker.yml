@@ -94,7 +94,7 @@ jobs:
           - service-name: fetap-baresip
             directory: device
             target: final
-    runs-on: rpi-zero-2w
+    runs-on: ubuntu-24.04-arm
     needs: build_and_push_baresip_4
     name: *baresip_name
     permissions: *baresip_permissions
