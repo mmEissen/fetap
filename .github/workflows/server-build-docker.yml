@@ -13,7 +13,7 @@ jobs:
             directory: device
             target: step1
     runs-on: ubuntu-24.04-arm
-    name: &baresip_name Build and Push baresip (${{ matrix.target }})
+    name: Install Dependencies and Download Source
     permissions: &baresip_permissions
       packages: write
       contents: read
@@ -55,7 +55,7 @@ jobs:
           - target: step2
     runs-on: rpi-zero-2w
     needs: baresip_step_1
-    name: *baresip_name
+    name: Configure Libre
     permissions: *baresip_permissions
     steps: *baresip_steps
   
@@ -66,7 +66,7 @@ jobs:
           - target: step3
     runs-on: ubuntu-24.04-arm
     needs: baresip_step_2
-    name: *baresip_name
+    name: Build Libre
     permissions: *baresip_permissions
     steps: *baresip_steps
   
@@ -77,18 +77,18 @@ jobs:
           - target: step4
     runs-on: rpi-zero-2w
     needs: baresip_step_3
-    name: *baresip_name
+    name: Configure Baresip
     permissions: *baresip_permissions
     steps: *baresip_steps
   
-  baresip_step_5:
+  baresip:
     strategy:
       matrix:
         include:
           - target: latest
     runs-on: ubuntu-24.04-arm
     needs: baresip_step_4
-    name: *baresip_name
+    name: Build and Push Baresip
     permissions: *baresip_permissions
     steps: *baresip_steps
 
@@ -110,6 +110,7 @@ jobs:
             directory: server
     runs-on: ubuntu-24.04-arm
     name: Build and push ${{ matrix.service-name }}
+    needs: [baresip]
     permissions:
       packages: write
       contents: read
