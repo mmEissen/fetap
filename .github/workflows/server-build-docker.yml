@@ -5,15 +5,15 @@ on:
     branches: ["main"]
 
 jobs:
-  build_and_push_baresip_1:
+  baresip_step_1:
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip
+          - service-name: baresip
             directory: device
-            target: prerequisites
+            target: step1
     runs-on: ubuntu-24.04-arm
-    name: &baresip_name Build and Push ${{ matrix.service-name }} (${{ matrix.target }})
+    name: &baresip_name Build and Push baresip (${{ matrix.target }})
     permissions: &baresip_permissions
       packages: write
       contents: read
@@ -29,7 +29,7 @@ jobs:
         uses: marceloprado/has-changed-path@v1.0.1
         id: service-changed
         with:
-          paths: ${{ matrix.directory }}/${{ matrix.service-name }} .github/workflows
+          paths: device/baresip .github/workflows
 
       - name: Log in to Docker Hub
         if: steps.service-changed.outputs.changed == 'true'
@@ -42,60 +42,52 @@ jobs:
         if: steps.service-changed.outputs.changed == 'true'
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
-          context: ./${{ matrix.directory }}/${{ matrix.service-name }}
-          file: ./${{ matrix.directory }}/${{ matrix.service-name }}/Dockerfile
+          context: ./device/baresip
+          file: ./device/baresip/Dockerfile
           target: ${{ matrix.target }}
           push: true
-          tags: mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:latest,mmeissen/${{ matrix.service-name }}-${{ matrix.target }}:${{ github.sha }}
+          tags: mmeissen/baresip:${{ matrix.target }}
 
-  build_and_push_baresip_2:
+  baresip_step_2:
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip
-            directory: device
-            target: re-configured
+          - target: step2
     runs-on: rpi-zero-2w
-    needs: build_and_push_baresip_1
+    needs: baresip_step_1
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
   
-  build_and_push_baresip_3:
+  baresip_step_3:
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip
-            directory: device
-            target: re-installed
+          - target: step3
     runs-on: ubuntu-24.04-arm
-    needs: build_and_push_baresip_2
+    needs: baresip_step_2
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
   
-  build_and_push_baresip_4:
+  baresip_step_4:
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip
-            directory: device
-            target: baresip-configured
+          - target: step4
     runs-on: rpi-zero-2w
-    needs: build_and_push_baresip_3
+    needs: baresip_step_3
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
   
-  build_and_push_baresip_5:
+  baresip_step_5:
     strategy:
       matrix:
         include:
-          - service-name: fetap-baresip
-            directory: device
-            target: final
+          - target: latest
     runs-on: ubuntu-24.04-arm
-    needs: build_and_push_baresip_4
+    needs: baresip_step_4
     name: *baresip_name
     permissions: *baresip_permissions
     steps: *baresip_steps
