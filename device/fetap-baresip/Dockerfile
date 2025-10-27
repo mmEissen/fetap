@@ -65,4 +65,4 @@ RUN cd /baresip \
 
 COPY config /config
 
-ENTRYPOINT [ "baresip", "-f", "/config" ]
+ENTRYPOINT [ "baresip", "-f", "/" ]
